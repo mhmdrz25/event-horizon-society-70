@@ -11,10 +11,10 @@ const Navbar: React.FC = () => {
   const location = useLocation();
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Announcements', path: '/announcements' },
-    { name: 'Events', path: '/events' },
-    { name: 'Profile', path: '/profile' },
+    { name: 'صفحه اصلی', path: '/' },
+    { name: 'اطلاعیه‌ها', path: '/announcements' },
+    { name: 'رویدادها', path: '/events' },
+    { name: 'پروفایل', path: '/profile' },
   ];
 
   return (
@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-navy dark:text-gold font-serif">ScienceHub</span>
+            <span className="text-2xl font-bold text-navy dark:text-gold font-serif">انجمن علمی</span>
           </Link>
         </div>
 
@@ -47,7 +47,7 @@ const Navbar: React.FC = () => {
               variant="ghost" 
               size="icon" 
               onClick={toggleTheme} 
-              aria-label="Toggle theme"
+              aria-label="تغییر تم"
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </Button>
@@ -55,15 +55,15 @@ const Navbar: React.FC = () => {
               variant="ghost" 
               size="icon" 
               onClick={toggleDirection} 
-              aria-label="Toggle text direction"
+              aria-label="تغییر جهت متن"
             >
               <Globe size={18} />
             </Button>
             <Link to="/login">
-              <Button variant="outline" size="sm">Login</Button>
+              <Button variant="outline" size="sm">ورود</Button>
             </Link>
             <Link to="/signup">
-              <Button className="bg-gold text-black hover:bg-gold/90" size="sm">Sign Up</Button>
+              <Button className="bg-gold text-black hover:bg-gold/90" size="sm">ثبت نام</Button>
             </Link>
           </div>
         </nav>
@@ -74,7 +74,7 @@ const Navbar: React.FC = () => {
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme} 
-            aria-label="Toggle theme"
+            aria-label="تغییر تم"
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </Button>
@@ -82,7 +82,7 @@ const Navbar: React.FC = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setIsMenuOpen(!isMenuOpen)} 
-            aria-label="Toggle menu"
+            aria-label="منو"
           >
             <Menu size={18} />
           </Button>
@@ -114,15 +114,15 @@ const Navbar: React.FC = () => {
                 onClick={toggleDirection} 
                 className="justify-start"
               >
-                <Globe size={16} className="mr-2" />
-                {direction === 'ltr' ? 'Switch to RTL' : 'Switch to LTR'}
+                <Globe size={16} className="ml-2" />
+                {direction === 'ltr' ? 'تغییر به راست به چپ' : 'تغییر به چپ به راست'}
               </Button>
               <div className="flex gap-2 mt-2">
                 <Link to="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Login</Button>
+                  <Button variant="outline" className="w-full">ورود</Button>
                 </Link>
                 <Link to="/signup" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full bg-gold text-black hover:bg-gold/90">Sign Up</Button>
+                  <Button className="w-full bg-gold text-black hover:bg-gold/90">ثبت نام</Button>
                 </Link>
               </div>
             </div>

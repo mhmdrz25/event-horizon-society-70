@@ -9,33 +9,33 @@ import { Link } from 'react-router-dom';
 const announcements = [
   {
     id: '1',
-    title: 'New Research Grants Available for Physics Students',
-    content: 'The Department of Physics is pleased to announce new research grants available for undergraduate and graduate students. Apply before the deadline to be considered for funding.',
-    date: 'May 15, 2025',
+    title: 'فرصت‌های پژوهشی جدید برای دانشجویان فیزیک',
+    content: 'گروه فیزیک با افتخار اعلام می‌کند که فرصت‌های پژوهشی جدیدی برای دانشجویان کارشناسی و تحصیلات تکمیلی فراهم شده است. قبل از موعد مقرر برای دریافت بودجه اقدام کنید.',
+    date: '۲۵ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Dr. Sarah Chen',
+      name: 'دکتر سارا چن',
       avatar: '',
     },
     commentCount: 5,
   },
   {
     id: '2',
-    title: 'Department Seminar: Advances in Quantum Computing',
-    content: 'Join us for a seminar on the latest advances in quantum computing, featuring guest speaker Dr. James Miller from Quantum Labs.',
-    date: 'May 10, 2025',
+    title: 'سمینار گروه: پیشرفت‌های محاسبات کوانتومی',
+    content: 'در سمینار ما درباره آخرین پیشرفت‌های محاسبات کوانتومی، با سخنرانی دکتر جیمز میلر از آزمایشگاه‌های کوانتوم شرکت کنید.',
+    date: '۲۰ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Prof. Alex Johnson',
+      name: 'پروفسور علی جانسون',
       avatar: '',
     },
     commentCount: 3,
   },
   {
     id: '3',
-    title: 'Summer Research Program Applications Now Open',
-    content: 'Applications for the summer research program are now open. This is a great opportunity for students to gain hands-on research experience.',
-    date: 'May 5, 2025',
+    title: 'ثبت نام برنامه پژوهشی تابستان آغاز شد',
+    content: 'ثبت نام برای برنامه پژوهشی تابستان اکنون باز است. این فرصت بسیار خوبی برای دانشجویان است تا تجربه عملی پژوهش کسب کنند.',
+    date: '۱۵ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Dr. Emily Wong',
+      name: 'دکتر امیلی ونگ',
       avatar: '',
     },
     commentCount: 7,
@@ -45,20 +45,20 @@ const announcements = [
 const events = [
   {
     id: '1',
-    title: 'Annual Science Fair',
-    description: 'Showcase your research projects and compete for prizes at our annual science fair.',
-    date: 'June 20, 2025',
-    location: 'University Main Hall',
+    title: 'نمایشگاه علمی سالانه',
+    description: 'پروژه‌های تحقیقاتی خود را به نمایش بگذارید و برای جوایز در نمایشگاه علمی سالانه ما رقابت کنید.',
+    date: '۳۰ خرداد ۱۴۰۴',
+    location: 'سالن اصلی دانشگاه',
     capacity: 100,
     registered: 65,
     image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
   },
   {
     id: '2',
-    title: 'Scientific Writing Workshop',
-    description: 'Learn how to write effective scientific papers and research proposals.',
-    date: 'June 15, 2025',
-    location: 'Science Building, Room 305',
+    title: 'کارگاه نگارش علمی',
+    description: 'یاد بگیرید چگونه مقالات علمی و پروپوزال‌های پژوهشی مؤثر بنویسید.',
+    date: '۲۵ خرداد ۱۴۰۴',
+    location: 'ساختمان علوم، اتاق 305',
     capacity: 30,
     registered: 25,
     image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
@@ -72,20 +72,20 @@ const HomePage: React.FC = () => {
       <section className="hero-gradient text-white py-20 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-up">
-            University Scientific Association
+            انجمن علمی دانشگاه
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 opacity-90 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            Connect with fellow scientists, discover research opportunities, and stay updated with the latest scientific events and announcements
+            با دانشمندان دیگر ارتباط برقرار کنید، فرصت‌های پژوهشی را کشف کنید و از آخرین رویدادها و اعلانات علمی مطلع شوید
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: '0.2s' }}>
             <Link to="/signup">
               <Button className="bg-gold text-black hover:bg-gold/90 text-lg px-8 py-6">
-                Join Our Community
+                به جامعه ما بپیوندید
               </Button>
             </Link>
             <Link to="/events">
               <Button variant="outline" className="text-white border-white hover:bg-white/10 text-lg px-8 py-6">
-                Explore Events
+                مشاهده رویدادها
               </Button>
             </Link>
           </div>
@@ -96,10 +96,10 @@ const HomePage: React.FC = () => {
       <section className="py-16 px-4 bg-background">
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-navy dark:text-white">Latest Announcements</h2>
+            <h2 className="text-3xl font-bold text-navy dark:text-white">آخرین اطلاعیه‌ها</h2>
             <Link to="/announcements">
               <Button variant="ghost" className="text-gold hover:text-gold hover:bg-gold/10">
-                View All
+                مشاهده همه
               </Button>
             </Link>
           </div>
@@ -123,10 +123,10 @@ const HomePage: React.FC = () => {
       <section className="py-16 px-4 bg-muted">
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-navy dark:text-white">Upcoming Events</h2>
+            <h2 className="text-3xl font-bold text-navy dark:text-white">رویدادهای پیش رو</h2>
             <Link to="/events">
               <Button variant="ghost" className="text-gold hover:text-gold hover:bg-gold/10">
-                View All
+                مشاهده همه
               </Button>
             </Link>
           </div>
@@ -151,13 +151,13 @@ const HomePage: React.FC = () => {
       {/* Call to Action Section */}
       <section className="py-16 px-4 bg-navy text-white">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Contribute?</h2>
+          <h2 className="text-3xl font-bold mb-6">آماده مشارکت هستید؟</h2>
           <p className="text-lg max-w-2xl mx-auto mb-8 opacity-90">
-            Share your research, ideas, or articles with our scientific community
+            پژوهش، ایده‌ها یا مقالات خود را با جامعه علمی ما به اشتراک بگذارید
           </p>
           <Link to="/submission">
             <Button className="bg-gold text-black hover:bg-gold/90 text-lg px-8 py-6">
-              Submit Your Work
+              ارسال اثر شما
             </Button>
           </Link>
         </div>

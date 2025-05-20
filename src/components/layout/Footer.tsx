@@ -8,35 +8,35 @@ const Footer: React.FC = () => {
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4 text-gold">ScienceHub</h3>
+            <h3 className="text-xl font-bold mb-4 text-gold">انجمن علمی</h3>
             <p className="text-navy-foreground">
-              University Scientific Association platform for sharing knowledge, 
-              announcing events, and connecting with fellow scientists.
+              سامانه انجمن علمی دانشگاه برای اشتراک گذاری دانش،
+              اعلام رویدادها و ارتباط با دیگر دانشمندان.
             </p>
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-4 text-gold">Quick Links</h4>
+            <h4 className="text-lg font-bold mb-4 text-gold">لینک‌های سریع</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="hover:text-gold transition-colors">Home</Link></li>
-              <li><Link to="/announcements" className="hover:text-gold transition-colors">Announcements</Link></li>
-              <li><Link to="/events" className="hover:text-gold transition-colors">Events</Link></li>
-              <li><Link to="/submission" className="hover:text-gold transition-colors">Submit Article</Link></li>
+              <li><Link to="/" className="hover:text-gold transition-colors">صفحه اصلی</Link></li>
+              <li><Link to="/announcements" className="hover:text-gold transition-colors">اطلاعیه‌ها</Link></li>
+              <li><Link to="/events" className="hover:text-gold transition-colors">رویدادها</Link></li>
+              <li><Link to="/submission" className="hover:text-gold transition-colors">ارسال مقاله</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-lg font-bold mb-4 text-gold">Contact</h4>
+            <h4 className="text-lg font-bold mb-4 text-gold">تماس با ما</h4>
             <address className="not-italic">
-              <p>University Science Department</p>
-              <p>Email: contact@sciencehub.edu</p>
-              <p>Phone: +1 (555) 123-4567</p>
+              <p>گروه علمی دانشگاه</p>
+              <p>ایمیل: contact@sciencehub.edu</p>
+              <p>تلفن: ۰۲۱-۱۲۳۴۵۶۷۸</p>
             </address>
           </div>
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-6 text-center text-sm text-navy-foreground/80">
-          <p>&copy; {new Date().getFullYear()} ScienceHub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} انجمن علمی. تمامی حقوق محفوظ است.</p>
         </div>
       </div>
     </footer>

@@ -8,88 +8,88 @@ import Search from '@/components/ui/search';
 const allAnnouncements = [
   {
     id: '1',
-    title: 'New Research Grants Available for Physics Students',
-    content: 'The Department of Physics is pleased to announce new research grants available for undergraduate and graduate students. Apply before the deadline to be considered for funding.',
-    date: 'May 15, 2025',
+    title: 'فرصت‌های پژوهشی جدید برای دانشجویان فیزیک',
+    content: 'گروه فیزیک با افتخار اعلام می‌کند که فرصت‌های پژوهشی جدیدی برای دانشجویان کارشناسی و تحصیلات تکمیلی فراهم شده است. قبل از موعد مقرر برای دریافت بودجه اقدام کنید.',
+    date: '۲۵ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Dr. Sarah Chen',
+      name: 'دکتر سارا چن',
       avatar: '',
     },
     commentCount: 5,
-    category: 'Grants',
+    category: 'بودجه',
   },
   {
     id: '2',
-    title: 'Department Seminar: Advances in Quantum Computing',
-    content: 'Join us for a seminar on the latest advances in quantum computing, featuring guest speaker Dr. James Miller from Quantum Labs.',
-    date: 'May 10, 2025',
+    title: 'سمینار گروه: پیشرفت‌های محاسبات کوانتومی',
+    content: 'در سمینار ما درباره آخرین پیشرفت‌های محاسبات کوانتومی، با سخنرانی دکتر جیمز میلر از آزمایشگاه‌های کوانتوم شرکت کنید.',
+    date: '۲۰ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Prof. Alex Johnson',
+      name: 'پروفسور علی جانسون',
       avatar: '',
     },
     commentCount: 3,
-    category: 'Seminar',
+    category: 'سمینار',
   },
   {
     id: '3',
-    title: 'Summer Research Program Applications Now Open',
-    content: 'Applications for the summer research program are now open. This is a great opportunity for students to gain hands-on research experience.',
-    date: 'May 5, 2025',
+    title: 'ثبت نام برنامه پژوهشی تابستان آغاز شد',
+    content: 'ثبت نام برای برنامه پژوهشی تابستان اکنون باز است. این فرصت بسیار خوبی برای دانشجویان است تا تجربه عملی پژوهش کسب کنند.',
+    date: '۱۵ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Dr. Emily Wong',
+      name: 'دکتر امیلی ونگ',
       avatar: '',
     },
     commentCount: 7,
-    category: 'Opportunity',
+    category: 'فرصت',
   },
   {
     id: '4',
-    title: 'Research Ethics Workshop',
-    content: 'The Research Ethics Committee will host a workshop on ethical considerations in scientific research.',
-    date: 'April 28, 2025',
+    title: 'کارگاه اخلاق پژوهشی',
+    content: 'کمیته اخلاق پژوهشی کارگاهی درباره ملاحظات اخلاقی در تحقیقات علمی برگزار خواهد کرد.',
+    date: '۸ اردیبهشت ۱۴۰۴',
     author: {
-      name: 'Dr. Michael Brown',
+      name: 'دکتر مایکل براون',
       avatar: '',
     },
     commentCount: 2,
-    category: 'Workshop',
+    category: 'کارگاه',
   },
   {
     id: '5',
-    title: 'New Equipment for Chemistry Lab',
-    content: 'The Chemistry Department has acquired new equipment for advanced chemical analysis. Training sessions will be announced soon.',
-    date: 'April 15, 2025',
+    title: 'تجهیزات جدید برای آزمایشگاه شیمی',
+    content: 'گروه شیمی تجهیزات جدیدی برای تحلیل‌های شیمیایی پیشرفته خریداری کرده است. جلسات آموزشی بزودی اعلام خواهد شد.',
+    date: '۲۵ فروردین ۱۴۰۴',
     author: {
-      name: 'Prof. Lisa Adams',
+      name: 'پروفسور لیزا آدامز',
       avatar: '',
     },
     commentCount: 4,
-    category: 'Resources',
+    category: 'منابع',
   },
   {
     id: '6',
-    title: 'Interdisciplinary Research Initiative',
-    content: 'Announcing a new initiative to promote interdisciplinary research projects across departments.',
-    date: 'April 10, 2025',
+    title: 'طرح تحقیقاتی میان‌رشته‌ای',
+    content: 'اعلام یک طرح جدید برای ترویج پروژه‌های پژوهشی میان‌رشته‌ای در میان گروه‌های مختلف.',
+    date: '۲۰ فروردین ۱۴۰۴',
     author: {
-      name: 'Dr. David Park',
+      name: 'دکتر داوود پارک',
       avatar: '',
     },
     commentCount: 8,
-    category: 'Initiative',
+    category: 'طرح',
   },
 ];
 
 const AnnouncementsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState('All');
+  const [category, setCategory] = useState('همه');
 
-  const categories = ['All', 'Grants', 'Seminar', 'Opportunity', 'Workshop', 'Resources', 'Initiative'];
+  const categories = ['همه', 'بودجه', 'سمینار', 'فرصت', 'کارگاه', 'منابع', 'طرح'];
   
   const filteredAnnouncements = allAnnouncements.filter(announcement => {
     const matchesSearch = announcement.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           announcement.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = category === 'All' || announcement.category === category;
+    const matchesCategory = category === 'همه' || announcement.category === category;
     
     return matchesSearch && matchesCategory;
   });
@@ -101,13 +101,13 @@ const AnnouncementsPage: React.FC = () => {
   return (
     <div className="container py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-navy dark:text-white">Announcements</h1>
-        <p className="text-muted-foreground">Stay updated with the latest news and information from our scientific community</p>
+        <h1 className="text-3xl font-bold mb-2 text-navy dark:text-white">اطلاعیه‌ها</h1>
+        <p className="text-muted-foreground">با آخرین اخبار و اطلاعات از جامعه علمی ما به روز بمانید</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="w-full md:w-2/3">
-          <Search placeholder="Search announcements..." onSearch={handleSearch} />
+          <Search placeholder="جستجوی اطلاعیه‌ها..." onSearch={handleSearch} />
         </div>
         <div className="w-full md:w-1/3 flex gap-2 overflow-x-auto pb-2">
           {categories.map((cat) => (
@@ -140,13 +140,13 @@ const AnnouncementsPage: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <h3 className="text-xl font-medium mb-2">No announcements found</h3>
-          <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
+          <h3 className="text-xl font-medium mb-2">هیچ اطلاعیه‌ای یافت نشد</h3>
+          <p className="text-muted-foreground mb-4">معیارهای جستجو یا فیلتر خود را تنظیم کنید</p>
           <Button 
             variant="outline" 
-            onClick={() => { setSearchQuery(''); setCategory('All'); }}
+            onClick={() => { setSearchQuery(''); setCategory('همه'); }}
           >
-            Clear filters
+            پاک کردن فیلترها
           </Button>
         </div>
       )}
