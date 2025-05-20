@@ -15,6 +15,10 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import SubmissionPage from "./pages/SubmissionPage";
+import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
+import EventDetailPage from "./pages/EventDetailPage";
+import AdminPage from "./pages/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +32,10 @@ const AppWithProviders = () => (
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/events/:id" element={<EventDetailPage />} />
+          <Route path="/submission" element={<SubmissionPage />} />
           
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
@@ -37,7 +44,7 @@ const AppWithProviders = () => (
           
           {/* Admin routes */}
           <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
-            {/* Add admin routes here */}
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />
