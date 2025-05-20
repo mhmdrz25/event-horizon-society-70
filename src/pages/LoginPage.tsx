@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,13 +11,29 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Will integrate with Supabase Auth
-    console.log('Login form submitted');
+    setIsSubmitting(true);
+    
+    try {
+      await signIn(email, password);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -34,7 +50,14 @@ const LoginPage: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="your.email@example.com" required />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="your.email@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -43,11 +66,23 @@ const LoginPage: React.FC = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full bg-navy hover:bg-navy/90">Sign in</Button>
+              <Button 
+                type="submit" 
+                className="w-full bg-navy hover:bg-navy/90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
+              </Button>
               <div className="text-center text-sm">
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-gold hover:underline">

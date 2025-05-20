@@ -11,28 +11,48 @@ import SignupPage from "./pages/SignupPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import EventsPage from "./pages/EventsPage";
 import ProfilePage from "./pages/ProfilePage";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
+
+const AppWithProviders = () => (
+  <BrowserRouter>
+    <AuthProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+          
+          {/* Admin routes */}
+          <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
+            {/* Add admin routes here */}
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
+    </AuthProvider>
+  </BrowserRouter>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/announcements" element={<AnnouncementsPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <AppWithProviders />
     </TooltipProvider>
   </QueryClientProvider>
 );
