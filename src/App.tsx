@@ -19,37 +19,40 @@ import SubmissionPage from "./pages/SubmissionPage";
 import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import AdminPage from "./pages/AdminPage";
+import RTLProvider from "./components/layout/RTLProvider";
 
 const queryClient = new QueryClient();
 
 const AppWithProviders = () => (
   <BrowserRouter>
     <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
-          <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="/events/:id" element={<EventDetailPage />} />
-          <Route path="/submission" element={<SubmissionPage />} />
-          
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<ProfilePage />} />
-          </Route>
-          
-          {/* Admin routes */}
-          <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
-            <Route path="/admin" element={<AdminPage />} />
-          </Route>
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+      <RTLProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route path="/submission" element={<SubmissionPage />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+            
+            {/* Admin routes */}
+            <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </RTLProvider>
     </AuthProvider>
   </BrowserRouter>
 );

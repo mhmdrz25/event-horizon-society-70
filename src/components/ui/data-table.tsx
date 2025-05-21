@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface DataTableProps {
   columns: {
@@ -84,6 +85,6 @@ export const DataTable: React.FC<DataTableProps> = ({
   );
 };
 
-// Export Badge component for usage in the admin page
-export { Badge } from '@/components/ui/badge';
-export { Progress } from '@/components/ui/progress';
+// No need for these exports as we now import them directly
+// export { Badge } from '@/components/ui/badge';
+// export { Progress } from '@/components/ui/progress';
