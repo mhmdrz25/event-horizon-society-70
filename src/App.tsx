@@ -8,6 +8,7 @@ import Layout from "./components/layout/Layout";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import MfaEnrollPage from "./pages/MfaEnrollPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import EventsPage from "./pages/EventsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -44,6 +45,7 @@ const AppWithProviders = () => (
               <Route path="/submission" element={<SubmissionPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/mfa-enroll" element={<MfaEnrollPage />} />
             </Route>
             
             {/* Admin routes */}

@@ -21,3 +21,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     }
   }
 });
+
+// Export SUPABASE_URL for convenience
+export { SUPABASE_URL };

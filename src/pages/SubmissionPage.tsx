@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -132,7 +132,7 @@ const SubmissionPage: React.FC = () => {
             .from('submissions')
             .update({ 
               // We can't directly use file_url since it's not in the type
-              // Instead, we'll use RPC to update it or modify the database schema
+              // Instead, we'll append the file URL to the content field
               content: data.content + '\n\nFile: ' + publicURL.publicUrl
             })
             .eq('id', submission.id);
