@@ -3,14 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronRight, Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import CommentSection from '@/components/common/CommentSection';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface Event {
   id: string;
@@ -46,25 +47,29 @@ const EventDetailPage: React.FC = () => {
     fetchEvent();
 
     // Set up realtime subscription for registrations
-    const channel = supabase
-      .channel('event-registrations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'event_registrations',
-          filter: `event_id=eq.${id}`
-        },
-        () => {
-          fetchEvent();
-        }
-      )
-      .subscribe();
+    if (id) {
+      const channel = supabase
+        .channel(`event-registrations-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'event_registrations',
+            filter: `event_id=eq.${id}`
+          },
+          () => {
+            fetchEvent();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+    
+    return () => {};
   }, [id, user]);
 
   const fetchEvent = async () => {
