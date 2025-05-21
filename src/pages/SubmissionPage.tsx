@@ -22,11 +22,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+// Maximum file size (10 MB in bytes)
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
 // Validation schema
 const formSchema = z.object({
   title: z.string().min(5, { message: 'عنوان باید حداقل ۵ کاراکتر باشد' }),
   content: z.string().min(50, { message: 'محتوا باید حداقل ۵۰ کاراکتر باشد' }),
-  file: z.any().optional(),
+  file: z.instanceof(File)
+    .refine(file => file.size <= MAX_FILE_SIZE, `حداکثر حجم فایل ۱۰ مگابایت است`)
+    .refine(
+      file => ACCEPTED_FILE_TYPES.includes(file.type),
+      'فقط فایل‌های PDF یا DOCX پذیرفته می‌شوند'
+    )
+    .optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,6 +59,23 @@ const SubmissionPage: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
     setFile(selectedFile);
+    
+    // Validate file manually
+    if (selectedFile) {
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        form.setError('file', { 
+          type: 'manual', 
+          message: 'حداکثر حجم فایل ۱۰ مگابایت است' 
+        });
+      } else if (!ACCEPTED_FILE_TYPES.includes(selectedFile.type)) {
+        form.setError('file', { 
+          type: 'manual', 
+          message: 'فقط فایل‌های PDF یا DOCX پذیرفته می‌شوند' 
+        });
+      } else {
+        form.clearErrors('file');
+      }
+    }
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -92,6 +119,18 @@ const SubmissionPage: React.FC = () => {
         if (uploadError) {
           throw uploadError;
         }
+
+        // Update submission with file URL
+        const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/submissions/${filePath}`;
+        
+        const { error: updateError } = await supabase
+          .from('submissions')
+          .update({ file_url: fileUrl })
+          .eq('id', submission.id);
+          
+        if (updateError) {
+          console.error('Error updating submission with file URL:', updateError);
+        }
       }
 
       toast({
@@ -102,9 +141,19 @@ const SubmissionPage: React.FC = () => {
       navigate('/profile');
     } catch (error: any) {
       console.error('Error submitting paper:', error);
+      
+      // Provide user-friendly error message
+      let errorMessage = 'لطفا دوباره تلاش کنید';
+      
+      if (error.message.includes('bucket')) {
+        errorMessage = 'خطا در آپلود فایل: مخزن ذخیره‌سازی پیکربندی نشده است';
+      } else if (error.message.includes('auth')) {
+        errorMessage = 'خطای احراز هویت. لطفاً دوباره وارد سیستم شوید';
+      }
+      
       toast({
         title: 'خطا در ارسال مقاله',
-        description: error.message || 'لطفا دوباره تلاش کنید',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -162,21 +211,33 @@ const SubmissionPage: React.FC = () => {
                 )}
               />
 
-              <FormItem>
-                <FormLabel>فایل پیوست (اختیاری)</FormLabel>
-                <FormControl>
-                  <div className="border border-input rounded-md p-2">
-                    <Input
-                      type="file"
-                      onChange={handleFileChange}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                  </div>
-                </FormControl>
-                <FormDescription>
-                  فرمت‌های قابل قبول: PDF و DOCX (حداکثر ۱۰ مگابایت)
-                </FormDescription>
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="file"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>فایل پیوست (اختیاری)</FormLabel>
+                    <FormControl>
+                      <div className="border border-input rounded-md p-2">
+                        <Input
+                          type="file"
+                          onChange={handleFileChange}
+                          accept=".pdf,.docx"
+                          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      فرمت‌های قابل قبول: PDF و DOCX (حداکثر ۱۰ مگابایت)
+                    </FormDescription>
+                    {form.formState.errors.file && (
+                      <p className="text-sm text-red-500">
+                        {form.formState.errors.file.message}
+                      </p>
+                    )}
+                  </FormItem>
+                )}
+              />
 
               <Button 
                 type="submit" 

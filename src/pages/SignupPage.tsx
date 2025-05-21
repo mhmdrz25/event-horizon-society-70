@@ -13,6 +13,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { z } from 'zod';
+
+// Validation schema
+const nameSchema = z.string().min(2, 'نام باید حداقل 2 کاراکتر باشد');
+const emailSchema = z.string().email('ایمیل وارد شده معتبر نیست');
+const passwordSchema = z.string().min(6, 'رمز عبور باید حداقل 6 کاراکتر باشد');
 
 const SignupPage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -20,7 +27,13 @@ const SignupPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { signUp, user } = useAuth();
@@ -31,18 +44,61 @@ const SignupPage: React.FC = () => {
   }
 
   const validateForm = () => {
+    let isValid = true;
+
+    // Validate first name
+    try {
+      nameSchema.parse(firstName);
+      setFirstNameError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setFirstNameError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    // Validate last name
+    try {
+      nameSchema.parse(lastName);
+      setLastNameError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setLastNameError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    // Validate email
+    try {
+      emailSchema.parse(email);
+      setEmailError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setEmailError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    // Validate password
+    try {
+      passwordSchema.parse(password);
+      setPasswordError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setPasswordError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    // Validate password confirmation
     if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match');
-      return false;
+      setConfirmPasswordError('رمزهای عبور مطابقت ندارند');
+      isValid = false;
+    } else {
+      setConfirmPasswordError('');
     }
-    
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return false;
-    }
-    
-    setPasswordError('');
-    return true;
+
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,65 +123,97 @@ const SignupPage: React.FC = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">ایجاد حساب کاربری</CardTitle>
             <CardDescription className="text-center">
-              Enter your information to create your account
+              اطلاعات خود را برای ایجاد حساب کاربری وارد کنید
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First name</Label>
+                  <Label htmlFor="firstName">نام</Label>
                   <Input 
                     id="firstName" 
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      if (firstNameError) validateForm();
+                    }}
+                    className={firstNameError ? "border-red-500" : ""}
                     required 
                   />
+                  {firstNameError && (
+                    <p className="text-sm text-red-500">{firstNameError}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last name</Label>
+                  <Label htmlFor="lastName">نام خانوادگی</Label>
                   <Input 
                     id="lastName" 
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      if (lastNameError) validateForm();
+                    }}
+                    className={lastNameError ? "border-red-500" : ""}
                     required 
                   />
+                  {lastNameError && (
+                    <p className="text-sm text-red-500">{lastNameError}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">ایمیل</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="your.email@example.com" 
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) validateForm();
+                  }}
+                  className={emailError ? "border-red-500" : ""}
                   required 
                 />
+                {emailError && (
+                  <p className="text-sm text-red-500">{emailError}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">رمز عبور</Label>
                 <Input 
                   id="password" 
                   type="password" 
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError || confirmPasswordError) validateForm();
+                  }}
+                  className={passwordError ? "border-red-500" : ""}
                   required 
                 />
+                {passwordError && (
+                  <p className="text-sm text-red-500">{passwordError}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">تأیید رمز عبور</Label>
                 <Input 
                   id="confirmPassword" 
                   type="password" 
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (confirmPasswordError) validateForm();
+                  }}
+                  className={confirmPasswordError ? "border-red-500" : ""}
                   required 
                 />
-                {passwordError && (
-                  <p className="text-sm text-destructive">{passwordError}</p>
+                {confirmPasswordError && (
+                  <p className="text-sm text-red-500">{confirmPasswordError}</p>
                 )}
               </div>
             </CardContent>
@@ -135,12 +223,17 @@ const SignupPage: React.FC = () => {
                 className="w-full bg-navy hover:bg-navy/90"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Creating account...' : 'Create account'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    در حال ایجاد حساب...
+                  </>
+                ) : 'ایجاد حساب'}
               </Button>
               <div className="text-center text-sm">
-                Already have an account?{" "}
+                قبلاً حساب کاربری ایجاد کرده‌اید؟{" "}
                 <Link to="/login" className="text-gold hover:underline">
-                  Sign in
+                  ورود
                 </Link>
               </div>
             </CardFooter>

@@ -42,11 +42,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, currentSession) => {
+            console.log('Auth state changed:', event);
             setSession(currentSession);
             setUser(currentSession?.user ?? null);
             
             if (event === 'SIGNED_OUT') {
               setProfile(null);
+            }
+            
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              // Fetch user profile when signed in or token refreshed
+              setTimeout(() => {
+                if (currentSession?.user) {
+                  fetchUserProfile(currentSession.user.id);
+                }
+              }, 0);
             }
           }
         );
@@ -55,6 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setUser(data.session?.user ?? null);
+        
+        if (data.session?.user) {
+          await fetchUserProfile(data.session.user.id);
+        }
         
         return () => {
           subscription.unsubscribe();
@@ -67,34 +81,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchSession();
   }, []);
 
-  // Fetch user profile when user changes
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        setProfile(null);
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          return;
-        }
-
-        setProfile(data as UserProfile);
-      } catch (error) {
-        console.error('Unexpected error fetching profile:', error);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
+      setProfile(data as UserProfile);
+    } catch (error) {
+      console.error('Unexpected error fetching profile:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
@@ -109,9 +114,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        const message = error.message.includes('unique constraint') 
+          ? 'این ایمیل قبلاً ثبت شده است'
+          : error.message;
+        
         toast({
-          title: 'Sign up failed',
-          description: error.message,
+          title: 'ثبت نام ناموفق',
+          description: message,
           variant: 'destructive',
         });
         return;
@@ -119,16 +128,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data.user) {
         toast({
-          title: 'Sign up successful',
-          description: 'Please check your email for the confirmation link.',
+          title: 'ثبت نام موفقیت آمیز',
+          description: 'لطفا ایمیل خود را برای تأیید بررسی کنید.',
         });
         navigate('/login');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error during sign up:', error);
       toast({
-        title: 'Sign up failed',
-        description: 'An unexpected error occurred. Please try again.',
+        title: 'خطا در ثبت نام',
+        description: 'خطای غیرمنتظره رخ داده است. لطفاً دوباره تلاش کنید.',
         variant: 'destructive',
       });
     }
@@ -142,24 +151,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        // Translate common error messages to Persian
+        let persianErrorMessage = '';
+        if (error.message.includes('Invalid login credentials')) {
+          persianErrorMessage = 'ایمیل یا رمز عبور نامعتبر است';
+        } else if (error.message.includes('Email not confirmed')) {
+          persianErrorMessage = 'ایمیل شما هنوز تأیید نشده است. لطفا ایمیل خود را بررسی کنید.';
+        } else {
+          persianErrorMessage = error.message;
+        }
+        
         toast({
-          title: 'Sign in failed',
-          description: error.message,
+          title: 'ورود ناموفق',
+          description: persianErrorMessage,
           variant: 'destructive',
         });
         return;
       }
 
-      toast({
-        title: 'Sign in successful',
-        description: 'Welcome back!',
-      });
-      navigate('/');
+      if (data.user) {
+        toast({
+          title: 'ورود موفقیت آمیز',
+          description: 'خوش آمدید!',
+        });
+        navigate('/');
+      }
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
       toast({
-        title: 'Sign in failed',
-        description: 'An unexpected error occurred. Please try again.',
+        title: 'خطا در ورود',
+        description: 'خطای غیرمنتظره رخ داده است. لطفاً دوباره تلاش کنید.',
         variant: 'destructive',
       });
     }
@@ -171,16 +192,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       toast({
-        title: 'Signed out',
-        description: 'You have been successfully signed out.',
+        title: 'خروج موفقیت آمیز',
+        description: 'شما با موفقیت از سیستم خارج شدید.',
       });
       
       navigate('/login');
     } catch (error) {
       console.error('Unexpected error during sign out:', error);
       toast({
-        title: 'Sign out failed',
-        description: 'An unexpected error occurred. Please try again.',
+        title: 'خطا در خروج',
+        description: 'خطای غیرمنتظره رخ داده است. لطفاً دوباره تلاش کنید.',
         variant: 'destructive',
       });
     }
@@ -197,7 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         toast({
-          title: 'Update failed',
+          title: 'به‌روزرسانی ناموفق',
           description: error.message,
           variant: 'destructive',
         });
@@ -208,14 +229,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfile(prev => prev ? { ...prev, ...data } : null);
 
       toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated.',
+        title: 'پروفایل به‌روزرسانی شد',
+        description: 'پروفایل شما با موفقیت به‌روزرسانی شد.',
       });
     } catch (error) {
       console.error('Unexpected error updating profile:', error);
       toast({
-        title: 'Update failed',
-        description: 'An unexpected error occurred. Please try again.',
+        title: 'خطا در به‌روزرسانی',
+        description: 'خطای غیرمنتظره رخ داده است. لطفاً دوباره تلاش کنید.',
         variant: 'destructive',
       });
     }

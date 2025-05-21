@@ -19,6 +19,7 @@ import SubmissionPage from "./pages/SubmissionPage";
 import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import AdminPage from "./pages/AdminPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import RTLProvider from "./components/layout/RTLProvider";
 
 const queryClient = new QueryClient();
@@ -37,11 +38,12 @@ const AppWithProviders = () => (
             <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/events/:id" element={<EventDetailPage />} />
-            <Route path="/submission" element={<SubmissionPage />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/submission" element={<SubmissionPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
             </Route>
             
             {/* Admin routes */}

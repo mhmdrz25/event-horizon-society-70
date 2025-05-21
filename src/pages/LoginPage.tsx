@@ -13,10 +13,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { z } from 'zod';
+
+// Email validation schema
+const emailSchema = z.string().email('ایمیل وارد شده معتبر نیست');
+const passwordSchema = z.string().min(6, 'رمز عبور باید حداقل 6 کاراکتر باشد');
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, user } = useAuth();
 
@@ -25,8 +33,39 @@ const LoginPage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const validateForm = () => {
+    let isValid = true;
+
+    try {
+      emailSchema.parse(email);
+      setEmailError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setEmailError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    try {
+      passwordSchema.parse(password);
+      setPasswordError('');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setPasswordError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -41,38 +80,52 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Sign in to your account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">ورود به حساب کاربری</CardTitle>
             <CardDescription className="text-center">
-              Enter your email and password to sign in
+              برای ورود، ایمیل و رمز عبور خود را وارد کنید
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">ایمیل</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="your.email@example.com" 
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) validateForm();
+                  }}
+                  className={emailError ? "border-red-500" : ""}
                   required 
                 />
+                {emailError && (
+                  <p className="text-sm text-red-500">{emailError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">رمز عبور</Label>
                   <Link to="/forgot-password" className="text-sm text-gold hover:underline">
-                    Forgot password?
+                    فراموشی رمز عبور
                   </Link>
                 </div>
                 <Input 
                   id="password" 
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) validateForm();
+                  }}
+                  className={passwordError ? "border-red-500" : ""}
                   required 
                 />
+                {passwordError && (
+                  <p className="text-sm text-red-500">{passwordError}</p>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
@@ -81,12 +134,19 @@ const LoginPage: React.FC = () => {
                 className="w-full bg-navy hover:bg-navy/90"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    در حال ورود...
+                  </>
+                ) : (
+                  'ورود'
+                )}
               </Button>
               <div className="text-center text-sm">
-                Don't have an account?{" "}
+                حساب کاربری ندارید؟{" "}
                 <Link to="/signup" className="text-gold hover:underline">
-                  Sign up
+                  ثبت نام
                 </Link>
               </div>
             </CardFooter>
