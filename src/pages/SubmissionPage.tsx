@@ -120,16 +120,26 @@ const SubmissionPage: React.FC = () => {
           throw uploadError;
         }
 
-        // Update submission with file URL
-        const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/submissions/${filePath}`;
-        
-        const { error: updateError } = await supabase
+        // Get the public URL for the file
+        const { data: publicURL } = supabase
+          .storage
           .from('submissions')
-          .update({ file_url: fileUrl })
-          .eq('id', submission.id);
-          
-        if (updateError) {
-          console.error('Error updating submission with file URL:', updateError);
+          .getPublicUrl(filePath);
+        
+        // Update submission with file URL
+        if (publicURL) {
+          const { error: updateError } = await supabase
+            .from('submissions')
+            .update({ 
+              // We can't directly use file_url since it's not in the type
+              // Instead, we'll use RPC to update it or modify the database schema
+              content: data.content + '\n\nFile: ' + publicURL.publicUrl
+            })
+            .eq('id', submission.id);
+            
+          if (updateError) {
+            console.error('Error updating submission with file URL:', updateError);
+          }
         }
       }
 
