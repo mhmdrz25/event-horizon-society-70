@@ -18,10 +18,12 @@ const MfaEnrollPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [totpSecret, setTotpSecret] = useState('');
   const [totpUri, setTotpUri] = useState('');
+  const [factorId, setFactorId] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [smsSent, setSmsSent] = useState(false);
+  const [smsFactorId, setSmsFactorId] = useState('');
 
   // If no user, redirect to login
   useEffect(() => {
@@ -54,6 +56,7 @@ const MfaEnrollPage: React.FC = () => {
         if (data) {
           setTotpSecret(data.totp.secret);
           setTotpUri(data.totp.uri);
+          setFactorId(data.id);
         }
       } catch (error: any) {
         toast({
@@ -72,13 +75,13 @@ const MfaEnrollPage: React.FC = () => {
   }, [user, activeTab]);
 
   const handleVerifyTotp = async () => {
-    if (!user || !totpSecret) return;
+    if (!user || !factorId) return;
     
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase.auth.mfa.challenge({
-        factorId: totpSecret,
+        factorId: factorId,
       });
       
       if (error) {
@@ -86,8 +89,8 @@ const MfaEnrollPage: React.FC = () => {
       }
       
       const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: totpSecret,
-        challenge: data!.id,
+        factorId: factorId,
+        challengeId: data!.id,
         code: verificationCode,
       });
       
@@ -119,20 +122,23 @@ const MfaEnrollPage: React.FC = () => {
       setIsLoading(true);
       
       const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: 'sms',
-        phoneNumber: phoneNumber,
+        factorType: 'phone',
+        phone: phoneNumber,
       });
       
       if (error) {
         throw error;
       }
       
-      setSmsSent(true);
-      
-      toast({
-        title: 'کد تأیید ارسال شد',
-        description: 'کد تأیید به شماره تلفن شما ارسال شد',
-      });
+      if (data) {
+        setSmsFactorId(data.id);
+        setSmsSent(true);
+        
+        toast({
+          title: 'کد تأیید ارسال شد',
+          description: 'کد تأیید به شماره تلفن شما ارسال شد',
+        });
+      }
     } catch (error: any) {
       toast({
         title: 'خطا در ارسال کد تأیید',
@@ -145,18 +151,27 @@ const MfaEnrollPage: React.FC = () => {
   };
 
   const handleVerifySms = async () => {
-    if (!user || !smsCode || !smsSent) return;
+    if (!user || !smsCode || !smsFactorId) return;
     
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase.auth.mfa.verify({
-        factorId: 'sms',
-        code: smsCode,
+      const { data, error } = await supabase.auth.mfa.challenge({
+        factorId: smsFactorId,
       });
       
       if (error) {
         throw error;
+      }
+      
+      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: smsFactorId,
+        challengeId: data!.id,
+        code: smsCode,
+      });
+      
+      if (verifyError) {
+        throw verifyError;
       }
       
       toast({
@@ -208,7 +223,7 @@ const MfaEnrollPage: React.FC = () => {
             </TabsList>
 
             <TabsContent value="totp" className="space-y-4 mt-4">
-              {isLoading ? (
+              {isLoading && !totpUri ? (
                 <div className="flex justify-center my-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
