@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
-// Define the Supabase URL from the same source that's used to initialize the client
+// Define the Supabase URL from environment variable
 const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyYmRkZnZuY2xyZ2N5Y2dkeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NDg3NjcsImV4cCI6MjA2MzMyNDc2N30.qG6aLqV-IHCDAmBqp_PCOl8HD9KTBnRmk7KWe3DaJYA";
 

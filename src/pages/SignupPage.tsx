@@ -15,6 +15,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import PasswordStrengthMeter from '@/components/auth/PasswordStrengthMeter';
+import { usePasswordSecurity } from '@/hooks/use-password-security';
 
 // Validation schema
 const nameSchema = z.string().min(2, 'نام باید حداقل 2 کاراکتر باشد');
@@ -35,8 +37,11 @@ const SignupPage: React.FC = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordCompromised, setIsPasswordCompromised] = useState(false);
+  const [occurrences, setOccurrences] = useState(0);
   
   const { signUp, user } = useAuth();
+  const { checkLeakedPassword, getPasswordStrength } = usePasswordSecurity();
 
   // Redirect if already logged in
   if (user) {
@@ -101,10 +106,34 @@ const SignupPage: React.FC = () => {
     return isValid;
   };
 
+  const handlePasswordChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    if (newPassword.length >= 8) {
+      const compromised = await checkLeakedPassword(newPassword);
+      setIsPasswordCompromised(compromised);
+    }
+    
+    if (passwordError || confirmPasswordError) validateForm();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
+      return;
+    }
+    
+    // Reject weak passwords
+    if (getPasswordStrength(password) < 3) {
+      setPasswordError('لطفا از یک رمز عبور قوی‌تر استفاده کنید');
+      return;
+    }
+    
+    // Reject compromised passwords
+    if (isPasswordCompromised) {
+      setPasswordError('این رمز عبور در نشت‌های داده یافت شده است. لطفا رمز دیگری انتخاب کنید');
       return;
     }
     
@@ -188,13 +217,17 @@ const SignupPage: React.FC = () => {
                   id="password" 
                   type="password" 
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (passwordError || confirmPasswordError) validateForm();
-                  }}
+                  onChange={handlePasswordChange}
                   className={passwordError ? "border-red-500" : ""}
                   required 
                 />
+                {password && password.length >= 6 && (
+                  <PasswordStrengthMeter 
+                    password={password}
+                    isCompromised={isPasswordCompromised}
+                    occurrences={occurrences}
+                  />
+                )}
                 {passwordError && (
                   <p className="text-sm text-red-500">{passwordError}</p>
                 )}

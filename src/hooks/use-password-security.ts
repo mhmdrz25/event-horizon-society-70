@@ -12,7 +12,7 @@ export const passwordSchema = z
   .regex(/[0-9]/, 'رمز عبور باید حداقل یک رقم داشته باشد')
   .regex(/[!@#$%^&*(),.?":{}|<>]/, 'رمز عبور باید حداقل یک کاراکتر خاص داشته باشد');
 
-// Define the Supabase URL from the same source that's used to initialize the client
+// Define the Supabase URL from environment variable 
 const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
 
 export const usePasswordSecurity = () => {

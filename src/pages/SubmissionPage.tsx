@@ -1,169 +1,128 @@
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
+import { Loader2, Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
+import { Navigate } from 'react-router-dom';
 
-// Maximum file size (10 MB in bytes)
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_FILE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+// Define the Supabase URL from environment variable
+const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
 
 // Validation schema
-const formSchema = z.object({
-  title: z.string().min(5, { message: 'عنوان باید حداقل ۵ کاراکتر باشد' }),
-  content: z.string().min(50, { message: 'محتوا باید حداقل ۵۰ کاراکتر باشد' }),
-  file: z.instanceof(File)
-    .refine(file => file.size <= MAX_FILE_SIZE, `حداکثر حجم فایل ۱۰ مگابایت است`)
-    .refine(
-      file => ACCEPTED_FILE_TYPES.includes(file.type),
-      'فقط فایل‌های PDF یا DOCX پذیرفته می‌شوند'
-    )
-    .optional(),
+const submissionSchema = z.object({
+  title: z.string().min(3, 'عنوان باید حداقل ۳ کاراکتر باشد'),
+  content: z.string().min(10, 'محتوا باید حداقل ۱۰ کاراکتر باشد'),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
-const SubmissionPage: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+const SubmissionPage = () => {
+  const { user, profile } = useAuth();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submissionSent, setSubmissionSent] = useState(false);
+  
+  // Check if user is allowed to make submissions
+  const [isAllowed, setIsAllowed] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      content: '',
-      file: undefined,
-    },
-  });
+  useEffect(() => {
+    const checkSubmissionStatus = async () => {
+      if (!user) return;
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] || null;
-    setFile(selectedFile);
-    
-    // Validate file manually
-    if (selectedFile) {
-      if (selectedFile.size > MAX_FILE_SIZE) {
-        form.setError('file', { 
-          type: 'manual', 
-          message: 'حداکثر حجم فایل ۱۰ مگابایت است' 
+      try {
+        setIsLoading(true);
+        
+        // Check if the user already has a pending submission
+        const { data, error } = await supabase
+          .from('submissions')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .maybeSingle();
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        setIsAllowed(!data); // Set to false if there's a pending submission
+      } catch (error) {
+        console.error('Error checking submission status:', error);
+        toast({
+          title: 'خطا در بررسی وضعیت',
+          description: 'خطایی در بررسی وضعیت ارسال‌های قبلی رخ داده است',
+          variant: 'destructive',
         });
-      } else if (!ACCEPTED_FILE_TYPES.includes(selectedFile.type)) {
-        form.setError('file', { 
-          type: 'manual', 
-          message: 'فقط فایل‌های PDF یا DOCX پذیرفته می‌شوند' 
-        });
-      } else {
-        form.clearErrors('file');
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    checkSubmissionStatus();
+  }, [user]);
+
+  const validateForm = () => {
+    try {
+      submissionSchema.parse({ title, content });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
+      return false;
     }
   };
 
-  const onSubmit = async (data: FormValues) => {
-    if (!user) {
-      toast({
-        title: 'خطای دسترسی',
-        description: 'برای ارسال مقاله باید ابتدا وارد سیستم شوید',
-        variant: 'destructive',
-      });
-      navigate('/login');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Insert submission to database
-      const { data: submission, error } = await supabase
+      const { data, error } = await supabase
         .from('submissions')
-        .insert({
-          title: data.title,
-          content: data.content,
-          user_id: user.id,
-          status: 'pending',
-        })
-        .select()
-        .single();
+        .insert([
+          {
+            title,
+            content,
+            user_id: user!.id,
+          },
+        ])
+        .select();
 
-      if (error) throw error;
-
-      // Upload file if selected
-      if (file && submission) {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${submission.id}.${fileExt}`;
-
-        const { error: uploadError } = await supabase
-          .storage
-          .from('submissions')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        // Get the public URL for the file
-        const { data: publicURL } = supabase
-          .storage
-          .from('submissions')
-          .getPublicUrl(filePath);
-        
-        // Update submission with file URL
-        if (publicURL) {
-          const { error: updateError } = await supabase
-            .from('submissions')
-            .update({ 
-              // We can't directly use file_url since it's not in the type
-              // Instead, we'll append the file URL to the content field
-              content: data.content + '\n\nFile: ' + publicURL.publicUrl
-            })
-            .eq('id', submission.id);
-            
-          if (updateError) {
-            console.error('Error updating submission with file URL:', updateError);
-          }
-        }
+      if (error) {
+        throw new Error(error.message);
       }
 
       toast({
-        title: 'مقاله با موفقیت ارسال شد',
-        description: 'مقاله شما برای بررسی به مدیران ارسال شد',
+        title: 'درخواست ارسال شد',
+        description: 'درخواست شما با موفقیت ارسال شد و در انتظار بررسی است',
       });
-      
-      navigate('/profile');
+
+      setSubmissionSent(true);
     } catch (error: any) {
-      console.error('Error submitting paper:', error);
-      
-      // Provide user-friendly error message
-      let errorMessage = 'لطفا دوباره تلاش کنید';
-      
-      if (error.message.includes('bucket')) {
-        errorMessage = 'خطا در آپلود فایل: مخزن ذخیره‌سازی پیکربندی نشده است';
-      } else if (error.message.includes('auth')) {
-        errorMessage = 'خطای احراز هویت. لطفاً دوباره وارد سیستم شوید';
-      }
-      
+      console.error('Error submitting:', error);
       toast({
-        title: 'خطا در ارسال مقاله',
-        description: errorMessage,
+        title: 'خطا در ارسال',
+        description: error.message || 'خطایی در ارسال درخواست رخ داده است',
         variant: 'destructive',
       });
     } finally {
@@ -171,87 +130,117 @@ const SubmissionPage: React.FC = () => {
     }
   };
 
+  // Redirect if user not logged in
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Show success message after submission
+  if (submissionSent) {
+    return (
+      <div className="container py-12 px-4">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-green-100 p-3">
+                  <svg
+                    className="h-8 w-8 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg font-medium">درخواست شما با موفقیت ارسال شد</h3>
+              <p className="text-gray-600">
+                درخواست شما در انتظار بررسی است. پس از بررسی، نتیجه به شما اطلاع داده خواهد شد.
+              </p>
+              <div className="pt-4">
+                <Button onClick={() => window.location.href = '/'}>
+                  بازگشت به صفحه اصلی
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-navy dark:text-white">ارسال مقاله</h1>
-        <p className="text-muted-foreground">ایده‌ها و یافته‌های پژوهشی خود را با جامعه علمی به اشتراک بگذارید</p>
+        <h1 className="text-3xl font-bold mb-2 text-navy dark:text-white">ارسال درخواست</h1>
+        <p className="text-muted-foreground">
+          درخواست خود را برای ما ارسال کنید. ما در اسرع وقت به آن رسیدگی خواهیم کرد.
+        </p>
       </div>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>فرم ارسال مقاله</CardTitle>
-          <CardDescription>لطفا اطلاعات مقاله خود را با دقت تکمیل کنید</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>عنوان مقاله</FormLabel>
-                    <FormControl>
-                      <Input placeholder="عنوان مقاله خود را وارد کنید" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+      {isLoading ? (
+        <div className="flex justify-center my-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : !isAllowed ? (
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-lg font-medium">شما در حال حاضر یک درخواست در انتظار بررسی دارید</h3>
+              <p className="text-gray-600">
+                پس از بررسی درخواست فعلی، می‌توانید درخواست جدیدی ارسال کنید.
+              </p>
+              <div className="pt-4">
+                <Button onClick={() => window.location.href = '/'}>
+                  بازگشت به صفحه اصلی
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>فرم ارسال درخواست</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title">عنوان درخواست</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className={errors.title ? "border-red-500" : ""}
+                  required
+                />
+                {errors.title && (
+                  <p className="text-sm text-red-500">{errors.title}</p>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>محتوای مقاله</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="محتوای مقاله خود را وارد کنید"
-                        className="min-h-[200px]" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      چکیده یا محتوای کامل مقاله خود را وارد کنید
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="content">متن درخواست</Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className={`min-h-[200px] resize-y ${errors.content ? "border-red-500" : ""}`}
+                  required
+                />
+                {errors.content && (
+                  <p className="text-sm text-red-500">{errors.content}</p>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="file"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>فایل پیوست (اختیاری)</FormLabel>
-                    <FormControl>
-                      <div className="border border-input rounded-md p-2">
-                        <Input
-                          type="file"
-                          onChange={handleFileChange}
-                          accept=".pdf,.docx"
-                          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      فرمت‌های قابل قبول: PDF و DOCX (حداکثر ۱۰ مگابایت)
-                    </FormDescription>
-                    {form.formState.errors.file && (
-                      <p className="text-sm text-red-500">
-                        {form.formState.errors.file.message}
-                      </p>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gold text-black hover:bg-gold/90" 
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -261,18 +250,15 @@ const SubmissionPage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Upload className="ml-2 h-4 w-4" />
-                    ارسال مقاله
+                    <Send className="ml-2 h-4 w-4" />
+                    ارسال درخواست
                   </>
                 )}
               </Button>
             </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex justify-center text-sm text-muted-foreground">
-          مقاله شما پس از بررسی توسط مدیران انجمن منتشر خواهد شد
-        </CardFooter>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
