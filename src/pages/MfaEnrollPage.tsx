@@ -10,10 +10,33 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, QrCode, Phone, Check, Copy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+
+// Component for OTP Input
+const OTPInput = ({ value, onChange, disabled = false }) => {
+  return (
+    <InputOTP
+      maxLength={6}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className="justify-center"
+      render={({ slots }) => (
+        <InputOTPGroup className="gap-2">
+          {slots.map((slot, index) => (
+            <InputOTPSlot key={index} {...slot} index={index} className="w-11 h-12 text-lg" />
+          ))}
+        </InputOTPGroup>
+      )}
+    />
+  );
+};
 
 const MfaEnrollPage: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('totp');
   const [isLoading, setIsLoading] = useState(false);
   const [totpSecret, setTotpSecret] = useState('');
@@ -24,6 +47,7 @@ const MfaEnrollPage: React.FC = () => {
   const [smsCode, setSmsCode] = useState('');
   const [smsSent, setSmsSent] = useState(false);
   const [smsFactorId, setSmsFactorId] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
 
   // If no user, redirect to login
   useEffect(() => {
@@ -120,7 +144,9 @@ const MfaEnrollPage: React.FC = () => {
     
     try {
       setIsLoading(true);
+      setOtpSending(true);
       
+      // 1. Enroll the phone factor with Supabase
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'phone',
         phone: phoneNumber,
@@ -130,15 +156,44 @@ const MfaEnrollPage: React.FC = () => {
         throw error;
       }
       
-      if (data) {
-        setSmsFactorId(data.id);
-        setSmsSent(true);
-        
-        toast({
-          title: 'کد تأیید ارسال شد',
-          description: 'کد تأیید به شماره تلفن شما ارسال شد',
-        });
+      if (!data) {
+        throw new Error('خطا در دریافت اطلاعات فاکتور');
       }
+      
+      setSmsFactorId(data.id);
+      
+      // 2. Generate a 6-digit code
+      // Supabase already generates this code internally, but we need to send it via our service
+      // This would typically be generated on the server, but for demo we'll create it here
+      // In production, you should use the edge function to generate this
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // 3. Send the code via our custom edge function (Kavenegar)
+      const sendResponse = await fetch(`${supabase.supabaseUrl}/functions/v1/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`
+        },
+        body: JSON.stringify({
+          phone: phoneNumber,
+          code,
+          factorId: data.id
+        })
+      });
+      
+      if (!sendResponse.ok) {
+        const errorData = await sendResponse.json();
+        throw new Error(errorData.error || 'خطا در ارسال کد تأیید');
+      }
+      
+      setSmsSent(true);
+      
+      toast({
+        title: 'کد تأیید ارسال شد',
+        description: 'کد تأیید به شماره تلفن شما ارسال شد',
+      });
+      
     } catch (error: any) {
       toast({
         title: 'خطا در ارسال کد تأیید',
@@ -147,6 +202,7 @@ const MfaEnrollPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      setOtpSending(false);
     }
   };
 
@@ -234,7 +290,13 @@ const MfaEnrollPage: React.FC = () => {
                     
                     {totpUri && (
                       <div className="flex justify-center my-4">
-                        <QrCode size={200} />
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpUri)}`}
+                          alt="QR Code"
+                          className="border rounded-md p-2 bg-white"
+                          width={200}
+                          height={200}
+                        />
                       </div>
                     )}
                     
@@ -252,19 +314,20 @@ const MfaEnrollPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2 mt-4">
-                    <Label htmlFor="verificationCode">کد تأیید</Label>
-                    <Input 
-                      id="verificationCode"
-                      type="text" 
-                      placeholder="کد 6 رقمی" 
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      className="text-center text-xl letter-spacing-2"
-                      maxLength={6}
-                    />
+                  <div className="space-y-2 mt-6">
+                    <div className="text-center">
+                      <Label htmlFor="verificationCode" className="mb-2 block">کد تأیید</Label>
+                      <OTPInput 
+                        value={verificationCode} 
+                        onChange={setVerificationCode}
+                        disabled={isLoading}
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        کد 6 رقمی نمایش داده شده در اپلیکیشن را وارد کنید
+                      </p>
+                    </div>
                     <Button 
-                      className="w-full mt-2"
+                      className="w-full mt-4"
                       onClick={handleVerifyTotp}
                       disabled={isLoading || verificationCode.length !== 6}
                     >
@@ -297,7 +360,8 @@ const MfaEnrollPage: React.FC = () => {
                         placeholder="09123456789"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="flex-1"
+                        className="flex-1 text-left"
+                        dir="ltr"
                       />
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -325,23 +389,21 @@ const MfaEnrollPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="smsCode">کد تأیید</Label>
-                    <Input
-                      id="smsCode"
-                      type="text"
-                      placeholder="کد 6 رقمی"
-                      value={smsCode}
-                      onChange={(e) => setSmsCode(e.target.value)}
-                      className="text-center text-xl letter-spacing-2"
-                      maxLength={6}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      کد تأیید ارسال شده به شماره {phoneNumber} را وارد کنید
-                    </p>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <Label htmlFor="smsCode" className="mb-2 block">کد تأیید</Label>
+                      <OTPInput 
+                        value={smsCode} 
+                        onChange={setSmsCode}
+                        disabled={isLoading}
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        کد تأیید ارسال شده به شماره {phoneNumber} را وارد کنید
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex space-x-2 space-x-reverse mt-4">
+                  <div className="flex space-x-2 space-x-reverse mt-6">
                     <Button 
                       variant="outline"
                       className="flex-1"
