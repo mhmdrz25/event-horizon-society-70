@@ -1,6 +1,6 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createHash } from "https://deno.land/std@0.177.0/hash/mod.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createHash } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -26,7 +26,7 @@ serve(async (req) => {
     }
 
     // Hash the password with SHA-1 (required by HIBP API)
-    const sha1Password = createHash('sha1').update(password).toString();
+    const sha1Password = createHash("sha1").update(password).toString();
     const prefix = sha1Password.substring(0, 5).toUpperCase();
     const suffix = sha1Password.substring(5).toUpperCase();
 

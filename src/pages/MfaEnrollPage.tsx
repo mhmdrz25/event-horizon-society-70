@@ -13,6 +13,10 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
+// Define the Supabase URL from the same source that's used to initialize the client
+const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyYmRkZnZuY2xyZ2N5Y2dkeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NDg3NjcsImV4cCI6MjA2MzMyNDc2N30.qG6aLqV-IHCDAmBqp_PCOl8HD9KTBnRmk7KWe3DaJYA";
+
 // Component for OTP Input
 const OTPInput = ({ value, onChange, disabled = false }) => {
   return (
@@ -169,11 +173,11 @@ const MfaEnrollPage: React.FC = () => {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       
       // 3. Send the code via our custom edge function (Kavenegar)
-      const sendResponse = await fetch(`${supabase.supabaseUrl}/functions/v1/send-otp`, {
+      const sendResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({
           phone: phoneNumber,

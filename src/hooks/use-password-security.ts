@@ -12,6 +12,9 @@ export const passwordSchema = z
   .regex(/[0-9]/, 'رمز عبور باید حداقل یک رقم داشته باشد')
   .regex(/[!@#$%^&*(),.?":{}|<>]/, 'رمز عبور باید حداقل یک کاراکتر خاص داشته باشد');
 
+// Define the Supabase URL from the same source that's used to initialize the client
+const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
+
 export const usePasswordSecurity = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [isCompromised, setIsCompromised] = useState(false);
@@ -37,7 +40,7 @@ export const usePasswordSecurity = () => {
     try {
       setIsChecking(true);
       
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/check-leaked-password`, {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/check-leaked-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
