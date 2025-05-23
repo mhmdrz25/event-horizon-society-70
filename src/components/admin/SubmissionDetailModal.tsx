@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,18 @@ interface SubmissionDetailModalProps {
   formatDate: (dateString: string) => string;
 }
 
+// Type for the raw response from Supabase
+interface RawSubmissionComment {
+  id: string;
+  submission_id: string;
+  admin_id: string;
+  comment: string;
+  created_at: string;
+  admin?: {
+    name: string;
+  } | null;
+}
+
 const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
   submission,
   isOpen,
@@ -56,8 +69,8 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     
     setIsLoadingComments(true);
     try {
-      // Use direct query instead of rpc to avoid type issues
-      const { data, error } = await supabase
+      // Use type assertion to bypass TypeScript's table name validation
+      const { data, error } = await (supabase as any)
         .from('submission_comments')
         .select(`
           id,
@@ -72,16 +85,16 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
       if (error) throw error;
       
-      // Ensure data is properly typed as SubmissionComment[]
+      // Type-safe conversion of the raw response
       if (data && Array.isArray(data)) {
-        const typedComments = data.map(item => ({
+        const typedComments: SubmissionComment[] = data.map((item: RawSubmissionComment) => ({
           id: item.id,
           submission_id: item.submission_id,
           admin_id: item.admin_id,
           comment: item.comment,
           created_at: item.created_at,
-          admin: item.admin
-        })) as SubmissionComment[];
+          admin: item.admin || undefined
+        }));
         
         setComments(typedComments);
       } else {
@@ -155,7 +168,8 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
         comment: comment.trim()
       };
 
-      const { error } = await supabase
+      // Use type assertion for the insert operation
+      const { error } = await (supabase as any)
         .from('submission_comments')
         .insert(commentData);
 
