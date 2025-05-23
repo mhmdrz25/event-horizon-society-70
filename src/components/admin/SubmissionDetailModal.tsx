@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -57,39 +56,36 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     
     setIsLoadingComments(true);
     try {
-      // Use rpc or direct query to bypass type issues
+      // Use direct query instead of rpc to avoid type issues
       const { data, error } = await supabase
-        .rpc('get_submission_comments', { submission_id_param: submission.id });
+        .from('submission_comments')
+        .select(`
+          id,
+          submission_id,
+          admin_id,
+          comment,
+          created_at,
+          admin:users!admin_id(name)
+        `)
+        .eq('submission_id', submission.id)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        // Fallback to direct query if rpc doesn't exist
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('submission_comments' as any)
-          .select(`
-            id,
-            submission_id,
-            admin_id,
-            comment,
-            created_at,
-            admin:users!admin_id(name)
-          `)
-          .eq('submission_id', submission.id)
-          .order('created_at', { ascending: false });
-
-        if (fallbackError) throw fallbackError;
-        
-        const formattedComments: SubmissionComment[] = (fallbackData || []).map((item: any) => ({
+      if (error) throw error;
+      
+      // Ensure data is properly typed as SubmissionComment[]
+      if (data && Array.isArray(data)) {
+        const typedComments = data.map(item => ({
           id: item.id,
           submission_id: item.submission_id,
           admin_id: item.admin_id,
           comment: item.comment,
           created_at: item.created_at,
           admin: item.admin
-        }));
+        })) as SubmissionComment[];
         
-        setComments(formattedComments);
+        setComments(typedComments);
       } else {
-        setComments(data || []);
+        setComments([]);
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -160,7 +156,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
       };
 
       const { error } = await supabase
-        .from('submission_comments' as any)
+        .from('submission_comments')
         .insert(commentData);
 
       if (error) throw error;
