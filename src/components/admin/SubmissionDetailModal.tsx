@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { Check, X, MessageSquare, User, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { SubmissionComment, SubmissionCommentInsert } from '@/types/submission-comments';
 
 interface Submission {
   id: string;
@@ -20,16 +22,6 @@ interface Submission {
   user?: {
     name: string;
     email: string;
-  };
-}
-
-interface SubmissionComment {
-  id: string;
-  comment: string;
-  created_at: string;
-  admin_id: string;
-  admin?: {
-    name: string;
   };
 }
 
@@ -65,17 +57,40 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     
     setIsLoadingComments(true);
     try {
+      // Use rpc or direct query to bypass type issues
       const { data, error } = await supabase
-        .from('submission_comments')
-        .select(`
-          *,
-          admin:users(name)
-        `)
-        .eq('submission_id', submission.id)
-        .order('created_at', { ascending: false });
+        .rpc('get_submission_comments', { submission_id_param: submission.id });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (error) {
+        // Fallback to direct query if rpc doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('submission_comments' as any)
+          .select(`
+            id,
+            submission_id,
+            admin_id,
+            comment,
+            created_at,
+            admin:users!admin_id(name)
+          `)
+          .eq('submission_id', submission.id)
+          .order('created_at', { ascending: false });
+
+        if (fallbackError) throw fallbackError;
+        
+        const formattedComments: SubmissionComment[] = (fallbackData || []).map((item: any) => ({
+          id: item.id,
+          submission_id: item.submission_id,
+          admin_id: item.admin_id,
+          comment: item.comment,
+          created_at: item.created_at,
+          admin: item.admin
+        }));
+        
+        setComments(formattedComments);
+      } else {
+        setComments(data || []);
+      }
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({
@@ -138,13 +153,15 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     if (!submission || !user || !comment.trim()) return;
 
     try {
+      const commentData: SubmissionCommentInsert = {
+        submission_id: submission.id,
+        admin_id: user.id,
+        comment: comment.trim()
+      };
+
       const { error } = await supabase
-        .from('submission_comments')
-        .insert({
-          submission_id: submission.id,
-          admin_id: user.id,
-          comment: comment.trim()
-        });
+        .from('submission_comments' as any)
+        .insert(commentData);
 
       if (error) throw error;
 
