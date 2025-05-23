@@ -57,6 +57,56 @@ export const useAdminData = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   
+  // Set up realtime subscription for submissions
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-submissions')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'submissions'
+        },
+        (payload) => {
+          console.log('New submission received:', payload);
+          // Fetch updated submissions data
+          if (submissions.length > 0) {
+            fetchData('submissions');
+          }
+          
+          toast({
+            title: 'درخواست جدید',
+            description: 'درخواست جدیدی ارسال شده است',
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'submissions'
+        },
+        (payload) => {
+          console.log('Submission updated:', payload);
+          // Update local state
+          setSubmissions(prev => 
+            prev.map(submission => 
+              submission.id === payload.new.id 
+                ? { ...submission, ...payload.new } 
+                : submission
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [submissions.length]);
+  
   const fetchData = async (tab: string) => {
     setIsLoading(true);
     try {
@@ -159,12 +209,27 @@ export const useAdminData = () => {
 
   const handleUpdateSubmissionStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
-      const { error } = await supabase
-        .from('submissions')
-        .update({ status })
-        .eq('id', id);
-      
-      if (error) throw error;
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch('/api/v1/manage-submission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.data.session.access_token}`,
+        },
+        body: JSON.stringify({
+          submissionId: id,
+          status
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'خطا در بروزرسانی وضعیت');
+      }
 
       // Update local state
       setSubmissions(submissions.map(submission => 

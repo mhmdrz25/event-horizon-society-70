@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Eye, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import SubmissionDetailModal from './SubmissionDetailModal';
 
 interface Submission {
   id: string;
@@ -31,10 +32,27 @@ const SubmissionTable: React.FC<SubmissionTableProps> = ({
   formatDate, 
   handleUpdateSubmissionStatus 
 }) => {
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewSubmission = (submission: Submission) => {
+    setSelectedSubmission(submission);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedSubmission(null);
+  };
+
   const submissionColumns = [
     {
       header: 'عنوان',
-      cell: ({ row }: { row: any }) => <div className="font-medium">{row.title}</div>
+      cell: ({ row }: { row: any }) => (
+        <div className="font-medium max-w-xs truncate" title={row.title}>
+          {row.title}
+        </div>
+      )
     },
     {
       header: 'نویسنده',
@@ -65,43 +83,55 @@ const SubmissionTable: React.FC<SubmissionTableProps> = ({
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => {
-              // View functionality would go here
-              alert('مشاهده مقاله: ' + row.id);
-            }}
+            onClick={() => handleViewSubmission(row)}
+            title="مشاهده جزئیات"
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-green-600"
-            onClick={() => handleUpdateSubmissionStatus(row.id, 'approved')}
-            disabled={row.status === 'approved'}
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-red-600"
-            onClick={() => handleUpdateSubmissionStatus(row.id, 'rejected')}
-            disabled={row.status === 'rejected'}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {row.status === 'pending' && (
+            <>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                onClick={() => handleUpdateSubmissionStatus(row.id, 'approved')}
+                title="تایید"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => handleUpdateSubmissionStatus(row.id, 'rejected')}
+                title="رد"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
       )
     }
   ];
 
   return (
-    <DataTable 
-      columns={submissionColumns} 
-      data={submissions} 
-      searchKey="title"
-      searchPlaceholder="جستجو بر اساس عنوان..."
-    />
+    <>
+      <DataTable 
+        columns={submissionColumns} 
+        data={submissions} 
+        searchKey="title"
+        searchPlaceholder="جستجو بر اساس عنوان..."
+      />
+      
+      <SubmissionDetailModal
+        submission={selectedSubmission}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onUpdate={handleUpdateSubmissionStatus}
+        formatDate={formatDate}
+      />
+    </>
   );
 };
 
