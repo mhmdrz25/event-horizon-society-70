@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { SubmissionComment, SubmissionCommentInsert } from '@/types/submission-comments';
+import FileUploadSection from './FileUploadSection';
 
 interface Submission {
   id: string;
@@ -235,6 +235,9 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* File Upload Section */}
+          <FileUploadSection submissionId={submission.id} />
 
           {/* Comments Section */}
           <Card>
