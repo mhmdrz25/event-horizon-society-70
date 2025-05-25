@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useSMSNotifications } from './useSMSNotifications';
 
 export interface SubmissionFile {
   id: string;
@@ -41,6 +42,7 @@ export const useSubmissionFiles = (submissionId: string) => {
   const [files, setFiles] = useState<SubmissionFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { sendFileUploadNotification } = useSMSNotifications();
 
   useEffect(() => {
     if (submissionId) {
@@ -126,6 +128,22 @@ export const useSubmissionFiles = (submissionId: string) => {
         title: 'فایل بارگذاری شد',
         description: 'فایل با موفقیت اضافه شد',
       });
+
+      // Send SMS notification to submission owner
+      try {
+        const { data: submissionData } = await supabase
+          .from('submissions')
+          .select('user_id')
+          .eq('id', submissionId)
+          .single();
+
+        if (submissionData?.user_id) {
+          await sendFileUploadNotification(submissionId, submissionData.user_id);
+        }
+      } catch (smsError) {
+        console.error('SMS notification failed:', smsError);
+        // Don't fail the upload if SMS fails
+      }
 
       await fetchFiles(); // Refresh file list
       return true;

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useSMSNotifications } from './useSMSNotifications';
 
 interface User {
   id: string;
@@ -56,6 +57,7 @@ export const useAdminData = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const { sendSubmissionApprovedNotification } = useSMSNotifications();
   
   // Set up realtime subscription for submissions
   useEffect(() => {
@@ -235,6 +237,19 @@ export const useAdminData = () => {
       setSubmissions(submissions.map(submission => 
         submission.id === id ? { ...submission, status } : submission
       ));
+
+      // Send SMS notification if status is approved
+      if (status === 'approved') {
+        try {
+          const submission = submissions.find(s => s.id === id);
+          if (submission?.user_id) {
+            await sendSubmissionApprovedNotification(id, submission.user_id);
+          }
+        } catch (smsError) {
+          console.error('SMS notification failed:', smsError);
+          // Don't fail the status update if SMS fails
+        }
+      }
 
       toast({
         title: 'وضعیت مقاله بروزرسانی شد',
