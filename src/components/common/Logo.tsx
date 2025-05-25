@@ -1,13 +1,13 @@
-
 import React from 'react';
 
 interface LogoProps {
   className?: string;
   showText?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  onClick?: () => void;
 }
 
-const Logo: React.FC<LogoProps> = ({ className = '', showText = true, size = 'md' }) => {
+const Logo: React.FC<LogoProps> = ({ className = '', showText = true, size = 'md', onClick }) => {
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -21,7 +21,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', showText = true, size = 'md
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`} onClick={onClick}>
       <div className={`${sizeClasses[size]} flex items-center justify-center`}>
         <svg
           viewBox="0 0 100 100"

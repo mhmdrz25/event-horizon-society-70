@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 
 export function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -30,7 +30,7 @@ export function Navbar() {
           {user ? (
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
-                {user.name || user.email}
+                {profile?.name || user.email}
               </span>
               <Button variant="outline" onClick={handleSignOut}>
                 خروج
