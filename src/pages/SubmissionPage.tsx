@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
+import FileUploadForm from '@/components/submission/FileUploadForm';
 
 // Define the Supabase URL from environment variable
 const SUPABASE_URL = "https://krbddfvnclrgcycgdxpu.supabase.co";
@@ -28,6 +29,7 @@ const SubmissionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submissionSent, setSubmissionSent] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   
   // Check if user is allowed to make submissions
   const [isAllowed, setIsAllowed] = useState(true);
@@ -112,6 +114,10 @@ const SubmissionPage = () => {
         throw new Error(error.message);
       }
 
+      if (data && data[0]) {
+        setSubmissionId(data[0].id);
+      }
+
       toast({
         title: 'درخواست ارسال شد',
         description: 'درخواست شما با موفقیت ارسال شد و در انتظار بررسی است',
@@ -136,7 +142,7 @@ const SubmissionPage = () => {
   }
 
   // Show success message after submission
-  if (submissionSent) {
+  if (submissionSent && submissionId) {
     return (
       <div className="container py-12 px-4">
         <Card className="max-w-2xl mx-auto">
@@ -162,8 +168,14 @@ const SubmissionPage = () => {
               </div>
               <h3 className="text-lg font-medium">درخواست شما با موفقیت ارسال شد</h3>
               <p className="text-gray-600">
-                درخواست شما در انتظار بررسی است. پس از بررسی، نتیجه به شما اطلاع داده خواهد شد.
+                درخواست شما در انتظار بررسی است. می‌توانید مقاله خود را به صورت PDF ضمیمه کنید.
               </p>
+              
+              {/* File Upload Section */}
+              <div className="pt-4">
+                <FileUploadForm submissionId={submissionId} />
+              </div>
+              
               <div className="pt-4">
                 <Button onClick={() => window.location.href = '/'}>
                   بازگشت به صفحه اصلی
@@ -237,6 +249,11 @@ const SubmissionPage = () => {
                 {errors.content && (
                   <p className="text-sm text-red-500">{errors.content}</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  پس از ارسال درخواست، می‌توانید مقاله خود را به صورت PDF ضمیمه کنید.
+                </p>
               </div>
               <Button
                 type="submit"
