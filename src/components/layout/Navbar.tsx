@@ -14,6 +14,13 @@ export function Navbar() {
     navigate('/');
   };
 
+  const navigationItems = [
+    { title: 'صفحه اصلی', path: '/' },
+    { title: 'اطلاعیه‌ها', path: '/announcements' },
+    { title: 'رویدادها', path: '/events' },
+    { title: 'ارسال مقاله', path: '/submission' },
+  ];
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -22,6 +29,19 @@ export function Navbar() {
           <div className="hidden md:block">
             <h1 className="text-lg font-semibold">انجمن علمی افق رویداد</h1>
           </div>
+        </div>
+        
+        {/* Navigation Menu */}
+        <div className="hidden lg:flex items-center space-x-6 rtl:space-x-reverse">
+          {navigationItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className="text-sm font-medium hover:text-gold transition-colors cursor-pointer"
+            >
+              {item.title}
+            </button>
+          ))}
         </div>
         
         <div className="flex items-center gap-4">
